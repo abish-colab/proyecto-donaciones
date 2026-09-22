@@ -1,0 +1,35 @@
+name: Pipeline CI-CD Proyecto Donaciones
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 1. Descargar codigo
+      uses: actions/checkout@v4
+
+    - name: 2. Configurar Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: 3. Instalar dependencias
+      run: |
+        python -m pip install --upgrade pip
+        pip install fastapi uvicorn pyjwt bcrypt pytest pytest-cov httpx "pydantic[email]"
+
+    - name: 4. Ejecutar pruebas con reporte de cobertura
+      run: |
+        pytest --cov=app --cov-report=term-missing --cov-fail-under=80
+
+    - name: 5. Despliegue automatico en entorno de pruebas
+      if: success()
+      run: |
+        echo "Pruebas superadas con exito (>=80% de cobertura)."
+        echo "Desplegando aplicacion al servidor de pruebas..."
